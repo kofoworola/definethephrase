@@ -4,29 +4,27 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 )
 
-const HANDLE string = "@_meaningofthephrase"
+const HANDLE string = "@__define__"
 
-func main(){
+func main() {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter tweet: ")
 	text, _ := reader.ReadString('\n')
-	index := -1
-	words := turnToWords(text);
-	for i,word := range words {
-		if word == HANDLE{
-			index = i
-		}
+	reg := regexp.MustCompile(HANDLE + " (the|this) (word|phrase)")
+	indices := reg.FindStringIndex(text)
+	if len(indices) != 2 {
+		fmt.Println("Could not understand")
+		return
 	}
-	if index == -1{
-		fmt.Println("Can not understand")
-		return;
-	}
-	understand(words,index);
+	phrase := strings.Trim(text[indices[1]:]," ")
+	fmt.Println(phrase)
 }
 
-func understand(words []string, index int){
+func understand(words []string, index int) {
 	phrase := words[index]
+	fmt.Println(phrase)
 }
-
