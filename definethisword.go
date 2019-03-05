@@ -21,6 +21,8 @@ func main() {
 		return
 	}
 	phrase := strings.Trim(text[indices[1]:]," ")
+	client := DefinitionClient{Phrase:phrase,Provider: "oxford"}
+	client.CheckDefinition()
 	fmt.Println(phrase)
 }
 
