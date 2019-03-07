@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 )
@@ -9,10 +11,9 @@ import (
 const HANDLE string = "@__define__"
 
 func main() {
-	//reader := bufio.NewReader(os.Stdin)
-	//fmt.Print("Enter tweet: ")
-	//text, _ := reader.ReadString('\n')
-	text := "@__define__ the word fool"
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter tweet: ")
+	text, _ := reader.ReadString('\n')
 	reg := regexp.MustCompile(HANDLE + " (the|this) (word|phrase)")
 	indices := reg.FindStringIndex(text)
 	if len(indices) != 2 {
@@ -22,7 +23,6 @@ func main() {
 	phrase := strings.Trim(text[indices[1]:]," ")
 	client := DefinitionClient{Phrase:phrase,Provider: "oxford"}
 	client.CheckDefinition()
-	fmt.Println(phrase)
 }
 
 func understand(words []string, index int) {
