@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 )
@@ -11,9 +9,10 @@ import (
 const HANDLE string = "@__define__"
 
 func main() {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter tweet: ")
-	text, _ := reader.ReadString('\n')
+	//reader := bufio.NewReader(os.Stdin)
+	//fmt.Print("Enter tweet: ")
+	//text, _ := reader.ReadString('\n')
+	text := "@__define__ the word fool"
 	reg := regexp.MustCompile(HANDLE + " (the|this) (word|phrase)")
 	indices := reg.FindStringIndex(text)
 	if len(indices) != 2 {
