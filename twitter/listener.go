@@ -8,10 +8,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 )
 
-const TWITTER_SECRET = "k5qEeQty8FWZdlHeX8TCVMw9Skp2uCnlZl5D3z2RTVjDY0XmuO"
-const TWITTER_API_KEY = "slKHNuEiolYbusScKkbOTB8dJ"
+var TWITTER_SECRET = os.Getenv("TWITTER_SECRET")
+var TWITTER_API_KEY = os.Getenv("TWITTER_API_KEY")
 
 type crcResponse struct {
 	ResponseToken string `json:"response_token"`
