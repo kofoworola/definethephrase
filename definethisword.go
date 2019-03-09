@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -11,6 +13,14 @@ import (
 const HANDLE string = "@__define__"
 
 func main() {
+	http.HandleFunc("/",twitterWebhook)
+	err := http.ListenAndServe(":9090", nil) // set listen port
+	if err != nil {
+		log.Fatal("ListenAndServe: ", err)
+	}
+}
+
+func understand(words []string, index int) {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter tweet: ")
 	text, _ := reader.ReadString('\n')
@@ -25,7 +35,6 @@ func main() {
 	client.CheckDefinition()
 }
 
-func understand(words []string, index int) {
-	phrase := words[index]
-	fmt.Println(phrase)
+func twitterWebhook(writer http.ResponseWriter, request *http.Request) {
+	fmt.Fprintf(writer,"Hello kofo")
 }
