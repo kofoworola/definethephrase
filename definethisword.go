@@ -3,7 +3,9 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/joho/godotenv"
 	"github.com/kofoworola/definethephrase/twitter"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -11,13 +13,19 @@ import (
 )
 
 func main() {
+	//Load env
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+		fmt.Println("Error loading .env file")
+	}
 	http.HandleFunc("/", func(writer http.ResponseWriter, _ *http.Request) {
 		fmt.Fprintf(writer,"Server is up and running")
 
 	})
 	http.HandleFunc("/twitter/webhook", twitter.CrcCheck)
-	if len(os.Getenv("BOT_PORT")) > 1 {
-		http.ListenAndServe(":" + os.Getenv("BOT_PORT"), nil)
+	if len(os.Getenv("PORT")) > 1 {
+		http.ListenAndServe(":" + os.Getenv("PORT"), nil)
 	} else{
 		http.ListenAndServe(":80", nil)
 	}
