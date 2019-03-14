@@ -6,6 +6,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/kofoworola/definethephrase/twitter"
 	"log"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -18,17 +19,17 @@ func main() {
 		log.Fatal("Error loading .env file")
 		fmt.Println("Error loading .env file")
 	}
-	twitter.GetWebhook()
-	//http.HandleFunc("/", func(writer http.ResponseWriter, _ *http.Request) {
-	//	fmt.Fprintf(writer,"Server is up and running")
-	//
-	//})
-	//http.HandleFunc("/twitter/webhook", twitter.CrcCheck)
-	//if len(os.Getenv("PORT")) > 1 {
-	//	http.ListenAndServe(":" + os.Getenv("PORT"), nil)
-	//} else{
-	//	http.ListenAndServe(":80", nil)
-	//}
+	//twitter.GetWebhook()
+	http.HandleFunc("/", func(writer http.ResponseWriter, _ *http.Request) {
+		fmt.Fprintf(writer,"Server is up and running")
+
+	})
+	http.HandleFunc("/twitter/webhook", twitter.CrcCheck)
+	if len(os.Getenv("PORT")) > 1 {
+		http.ListenAndServe(":" + os.Getenv("PORT"), nil)
+	} else{
+		http.ListenAndServe(":80", nil)
+	}
 }
 
 func understand(words []string, index int) {
