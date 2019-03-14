@@ -3,8 +3,9 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
-	"github.com/kofoworola/definethephrase/twitter"
+	"golang.org/x/crypto/acme/autocert"
 	"log"
 	"net/http"
 	"os"
@@ -20,23 +21,34 @@ func main() {
 		fmt.Println("Error loading .env file")
 	}
 	//twitter.GetWebhook()
-	
 	//Listen to TLS (SSL)
-	go func(){
-		http.ListenAndServeTLS(":443",
-			"/etc/letsencrypt/live/"+os.Getenv("APP_URL")+"/fullchain.pem",
-			"/etc/letsencrypt/live/"+os.Getenv("APP_URL")+"/privkey.pem",nil)
-	}()
-	http.HandleFunc("/", func(writer http.ResponseWriter, _ *http.Request) {
-		fmt.Fprintf(writer,"Server is up and running")
+	setUpServer()
+}
 
+func setUpServer() {
+	//Register routes with mux
+	m := mux.NewRouter()
+	m.HandleFunc("/", func(writer http.ResponseWriter, _ *http.Request) {
+		writer.WriteHeader(200)
+		fmt.Fprintf(writer, "Server is up and running")
 	})
-	http.HandleFunc("/twitter/webhook", twitter.CrcCheck)
-	if len(os.Getenv("PORT")) > 1 {
-		http.ListenAndServe(":" + os.Getenv("PORT"), nil)
-	} else{
-		http.ListenAndServe(":80", nil)
+	server := &http.Server{
+		Handler: m,
 	}
+
+	//If we are on prod register use autocert listener
+	if os.Getenv("APP_ENV") != "local" {
+		listener := autocert.NewListener(os.Getenv("APP_URL"))
+		server.Serve(listener)
+	} else{
+		port := "80"
+		if os.Getenv("PORT") != "" {
+			port = os.Getenv("PORT")
+		}
+		server.Addr = ":"+port
+		server.ListenAndServe()
+	}
+
 }
 
 func understand(words []string, index int) {
