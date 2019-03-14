@@ -20,6 +20,13 @@ func main() {
 		fmt.Println("Error loading .env file")
 	}
 	//twitter.GetWebhook()
+	
+	//Listen to TLS (SSL)
+	go func(){
+		http.ListenAndServeTLS(":443",
+			"/etc/letsencrypt/live/"+os.Getenv("APP_URL")+"/fullchain.pem",
+			"/etc/letsencrypt/live/"+os.Getenv("APP_URL")+"/privkey.pem",nil)
+	}()
 	http.HandleFunc("/", func(writer http.ResponseWriter, _ *http.Request) {
 		fmt.Fprintf(writer,"Server is up and running")
 
