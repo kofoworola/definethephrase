@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func GetWebhook() {
+func RegisterWebhook() {
 	consumerKey := os.Getenv("CONSUMER_KEY")
 	consumerSecret := os.Getenv("CONSUMER_SECRET")
 	accessToken := os.Getenv("ACCESS_TOKEN")
@@ -24,7 +24,7 @@ func GetWebhook() {
 	// httpClient will automatically authorize http.Request's
 	httpClient := config.Client(oauth1.NoContext, token)
 
-	path := "https://api.twitter.com/1.1/account_activity/all/dev/webhooks.json"
+	path := "https://api.twitter.com/1.1/account_activity/all/"+os.Getenv("WEBHOOK_ENV")+"/webhooks.json"
 	values := url.Values{}
 	values.Set("url", "https://"+os.Getenv("APP_URL")+"/twitter/webhook")
 	resp, _ := httpClient.PostForm(path, values)

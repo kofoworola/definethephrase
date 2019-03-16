@@ -20,8 +20,8 @@ func main() {
 		log.Fatal("Error loading .env file")
 		fmt.Println("Error loading .env file")
 	}
-	go setUpServer()
-	twitter.GetWebhook()
+	//go twitter.RegisterWebhook()
+	setUpServer()
 }
 
 func setUpServer() {
@@ -31,6 +31,7 @@ func setUpServer() {
 		writer.WriteHeader(200)
 		fmt.Fprintf(writer, "Server is up and running")
 	})
+	m.HandleFunc("/twitter/webhook", twitter.CrcCheck).Methods("GET")
 	server := &http.Server{
 		Handler: m,
 	}
