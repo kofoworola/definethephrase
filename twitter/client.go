@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func GetWebhook(){
+func GetWebhook() {
 	consumerKey := os.Getenv("CONSUMER_KEY")
 	consumerSecret := os.Getenv("CONSUMER_SECRET")
 	accessToken := os.Getenv("ACCESS_TOKEN")
@@ -26,8 +26,8 @@ func GetWebhook(){
 
 	path := "https://api.twitter.com/1.1/account_activity/all/dev/webhooks.json"
 	values := url.Values{}
-	values.Set("url","http://3.18.125.1/twitter/webhook")
-	resp, _ := httpClient.PostForm(path,values)
+	values.Set("url", "https://"+os.Getenv("APP_URL")+"/twitter/webhook")
+	resp, _ := httpClient.PostForm(path, values)
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
 	fmt.Printf("Raw Response Body:\n%v\n", string(body))

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
-	"golang.org/x/crypto/acme/autocert"
+	"github.com/kofoworola/definethephrase/twitter"
 	"log"
 	"net/http"
 	"os"
@@ -20,9 +20,8 @@ func main() {
 		log.Fatal("Error loading .env file")
 		fmt.Println("Error loading .env file")
 	}
-	//twitter.GetWebhook()
-	//Listen to TLS (SSL)
-	setUpServer()
+	go setUpServer()
+	twitter.GetWebhook()
 }
 
 func setUpServer() {
@@ -35,20 +34,12 @@ func setUpServer() {
 	server := &http.Server{
 		Handler: m,
 	}
-
-	//If we are on prod register use autocert listener
-	if os.Getenv("APP_ENV") != "local" {
-		listener := autocert.NewListener(os.Getenv("APP_URL"))
-		server.Serve(listener)
-	} else{
-		port := "80"
-		if os.Getenv("PORT") != "" {
-			port = os.Getenv("PORT")
-		}
-		server.Addr = ":"+port
-		server.ListenAndServe()
+	port := "80"
+	if os.Getenv("PORT") != "" {
+		port = os.Getenv("PORT")
 	}
-
+	server.Addr = ":" + port
+	server.ListenAndServe()
 }
 
 func understand(words []string, index int) {
