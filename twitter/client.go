@@ -17,6 +17,9 @@ func RegisterWebhook() {
 	if consumerKey == "" || consumerSecret == "" || accessToken == "" || accessSecret == "" {
 		panic("Missing required environment variable")
 	}
+	if os.Getenv("WEBHOOK_ENV") == "" || os.Getenv("APP_URL") == ""{
+		panic("missing app url or web env")
+	}
 
 	config := oauth1.NewConfig(consumerKey, consumerSecret)
 	token := oauth1.NewToken(accessToken, accessSecret)
