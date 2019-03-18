@@ -38,6 +38,7 @@ func setUpServer() {
 		fmt.Fprintf(writer, "Server is up and running")
 	})
 	m.HandleFunc("/twitter/webhook", twitter.CrcCheck).Methods("GET")
+	m.HandleFunc("/twitter/webhook", twitter.WebhookHandler).Methods("POST")
 	server := &http.Server{
 		Handler: m,
 	}

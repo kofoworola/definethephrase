@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
@@ -29,4 +30,9 @@ func CrcCheck(writer http.ResponseWriter, request *http.Request) {
 	encoded := base64.StdEncoding.EncodeToString(h.Sum(nil))
 	response, _ := json.Marshal(crcResponse{ResponseToken: "sha256=" + encoded})
 	fmt.Fprintf(writer, string(response))
+}
+
+func WebhookHandler(writer http.ResponseWriter, request *http.Request){
+	body,_ := ioutil.ReadAll(request.Body)
+	fmt.Println(string(body));
 }
