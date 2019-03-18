@@ -20,8 +20,12 @@ func main() {
 		log.Fatal("Error loading .env file")
 		fmt.Println("Error loading .env file")
 	}
-	if len(os.Args) > 1 && os.Args[1] == "-gethook"{
-		go twitter.GetWebhook()
+	if args := os.Args; len(args) > 1{
+		if args[1] == "-gethook"{
+			go twitter.GetWebhook()
+		}else if args[1] == "-subscribe"{
+			go twitter.SubscribeWebhook()
+		}
 	}
 	setUpServer()
 }

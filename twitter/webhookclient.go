@@ -16,7 +16,8 @@ var endpoint = "https://api.twitter.com/1.1/account_activity"
 //Check if all credentials needed were successfully passed
 func hasEnvVariables() bool {
 	return os.Getenv("CONSUMER_KEY") != "" && os.Getenv("CONSUMER_SECRET") != "" &&
-		os.Getenv("ACCESS_TOKEN") != "" && os.Getenv("ACCESS_SECRET") != ""
+		os.Getenv("ACCESS_TOKEN") != "" && os.Getenv("ACCESS_SECRET") != "" &&
+		os.Getenv("WEBHOOK_ENV") != ""
 }
 
 //Create http client for twitter requests
@@ -37,7 +38,7 @@ func GetWebhook() {
 	fmt.Println("Getting webhooks...")
 	client := createClient()
 	path := endpoint + "/all/" + os.Getenv("WEBHOOK_ENV") + "/webhooks.json"
-	resp,_ := client.Get(path)
+	resp, _ := client.Get(path)
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
 	var data []map[string]interface{}
@@ -45,25 +46,26 @@ func GetWebhook() {
 		panic(err)
 	}
 	hasId := false
-	for _,item := range data  {
-		if item["valid"].(bool){
-			conn.Do("SET","webhook_id",item["id"].(string))
+	for _, item := range data {
+		if item["valid"].(bool) {
+			conn.Do("SET", "webhook_id", item["id"].(string))
 			fmt.Println("Webhook id of" + item["id"].(string) + " exists.")
 			hasId = true
 			break
 		}
 	}
-	if !hasId{
+	if !hasId {
 		RegisterWebhook()
 	}
 }
+
 func RegisterWebhook() {
 	fmt.Println("Registering webhook...")
 	if !hasEnvVariables() {
 		panic("Missing required environment variable")
 	}
-	if os.Getenv("WEBHOOK_ENV") == "" || os.Getenv("APP_URL") == "" {
-		panic("missing app url or web env")
+	if os.Getenv("APP_URL") == "" {
+		panic("missing app url")
 	}
 
 	httpClient := createClient()
@@ -79,6 +81,24 @@ func RegisterWebhook() {
 		panic(err)
 	}
 	conn := redisdb.GetPool().Get()
-	conn.Do("SET","webhook_id",data["id"].(string))
+	conn.Do("SET", "webhook_id", data["id"].(string))
 	fmt.Println("Webhook id of" + data["id"].(string) + "has been registered")
+}
+
+func SubscribeWebhook() {
+	fmt.Println("Subscribing webapp...")
+	if !hasEnvVariables() {
+		panic("Missing Environment Variables")
+	}
+	client := createClient()
+	path := endpoint + "/all/" + os.Getenv("WEBHOOK_ENV") + "/subscriptions.json"
+	resp, _ := client.PostForm(path, nil)
+	body,_ := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	if resp.StatusCode == 204 {
+		fmt.Println("Subscribed successfully")
+	} else{
+		fmt.Println("Could not subscribe the webhook. Response below:")
+		fmt.Println(string(body))
+	}
 }
