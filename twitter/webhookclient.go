@@ -49,9 +49,11 @@ func GetWebhook() {
 	for _, item := range data {
 		if item["valid"].(bool) {
 			conn.Do("SET", "webhook_id", item["id"].(string))
-			fmt.Println("Webhook id of" + item["id"].(string) + " exists.")
+			fmt.Println("Webhook id of " + item["id"].(string) + " exists.")
 			hasId = true
 			break
+		}else {
+			DeleteWebhook(item["id"].(string))
 		}
 	}
 	if !hasId {
@@ -82,7 +84,7 @@ func RegisterWebhook() {
 	}
 	conn := redisdb.GetPool().Get()
 	conn.Do("SET", "webhook_id", data["id"].(string))
-	fmt.Println("Webhook id of" + data["id"].(string) + "has been registered")
+	fmt.Println("Webhook id of " + data["id"].(string) + "has been registered")
 }
 
 func SubscribeWebhook() {
@@ -93,12 +95,35 @@ func SubscribeWebhook() {
 	client := createClient()
 	path := endpoint + "/all/" + os.Getenv("WEBHOOK_ENV") + "/subscriptions.json"
 	resp, _ := client.PostForm(path, nil)
-	body,_ := ioutil.ReadAll(resp.Body)
+	body, _ := ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()
 	if resp.StatusCode == 204 {
 		fmt.Println("Subscribed successfully")
-	} else{
+	} else {
 		fmt.Println("Could not subscribe the webhook. Response below:")
+		fmt.Println(string(body))
+	}
+}
+
+func DeleteWebhook(id string) {
+	fmt.Println("Deleting webhook...")
+	if !hasEnvVariables() {
+		panic("Missing required environment variable")
+	}
+	client := createClient()
+	path := endpoint + "/all/" + os.Getenv("WEBHOOK_ENV") + "/webhooks/" + id + ".json"
+	req, err := http.NewRequest("DELETE", path, nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	resp, _ := client.Do(req)
+	defer resp.Body.Close()
+	if resp.StatusCode == 204 {
+		fmt.Println("Deleted webhook " + id)
+	} else {
+		fmt.Println("An Error ocuured. Response below: ")
+		body, _ := ioutil.ReadAll(resp.Body)
 		fmt.Println(string(body))
 	}
 }

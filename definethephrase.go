@@ -25,6 +25,8 @@ func main() {
 			go twitter.GetWebhook()
 		}else if args[1] == "-subscribe"{
 			go twitter.SubscribeWebhook()
+		} else if args[1] == "-delete" && len(args) > 2{
+			go twitter.DeleteWebhook(args[2])
 		}
 	}
 	setUpServer()
