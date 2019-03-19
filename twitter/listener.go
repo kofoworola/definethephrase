@@ -33,6 +33,12 @@ func CrcCheck(writer http.ResponseWriter, request *http.Request) {
 }
 
 func WebhookHandler(writer http.ResponseWriter, request *http.Request){
+	fmt.Println("Handler called")
 	body,_ := ioutil.ReadAll(request.Body)
-	fmt.Println(string(body));
+	var load WebhookLoad
+	json.Unmarshal(body,&load)
+	if len(load.TweetCreateEvent) < 1{
+		return
+	}
+	fmt.Println(load.TweetCreateEvent[0])
 }
