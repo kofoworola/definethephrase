@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -9,8 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"regexp"
-	"strings"
 )
 
 func main() {
@@ -39,8 +36,8 @@ func setUpServer() {
 		writer.WriteHeader(200)
 		fmt.Fprintf(writer, "Server is up and running")
 	})
-	m.HandleFunc("/twitter/webhook", twitter.CrcCheck).Methods("GET")
-	m.HandleFunc("/twitter/webhook", twitter.WebhookHandler).Methods("POST")
+	m.HandleFunc("/twitter/webhook", CrcCheck).Methods("GET")
+	m.HandleFunc("/twitter/webhook", WebhookHandler).Methods("POST")
 	server := &http.Server{
 		Handler: m,
 	}
@@ -50,21 +47,4 @@ func setUpServer() {
 	}
 	server.Addr = ":" + port
 	server.ListenAndServe()
-}
-
-func understand(words []string, index int) {
-	handle := os.Getenv("HANDLE")
-
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter tweet: ")
-	text, _ := reader.ReadString('\n')
-	reg := regexp.MustCompile("@" + handle + " (the|this) (word|phrase)")
-	indices := reg.FindStringIndex(text)
-	if len(indices) != 2 {
-		fmt.Println("Could not understand")
-		return
-	}
-	phrase := strings.Trim(text[indices[1]:], " ")
-	client := DefinitionClient{Phrase: phrase, Provider: "oxford"}
-	client.CheckDefinition()
 }

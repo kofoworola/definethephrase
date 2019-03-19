@@ -3,7 +3,6 @@ package twitter
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dghubble/oauth1"
 	"github.com/kofoworola/definethephrase/redisdb"
 	"io/ioutil"
 	"net/http"
@@ -14,29 +13,21 @@ import (
 var endpoint = "https://api.twitter.com/1.1/account_activity"
 
 //Check if all credentials needed were successfully passed
-func hasEnvVariables() bool {
+func HasEnvVariables() bool {
 	return os.Getenv("CONSUMER_KEY") != "" && os.Getenv("CONSUMER_SECRET") != "" &&
 		os.Getenv("ACCESS_TOKEN") != "" && os.Getenv("ACCESS_SECRET") != "" &&
 		os.Getenv("WEBHOOK_ENV") != ""
-}
-
-//Create http client for twitter requests
-func createClient() *http.Client {
-	config := oauth1.NewConfig(os.Getenv("CONSUMER_KEY"), os.Getenv("CONSUMER_SECRET"))
-	token := oauth1.NewToken(os.Getenv("ACCESS_TOKEN"), os.Getenv("ACCESS_SECRET"))
-
-	return config.Client(oauth1.NoContext, token)
 }
 
 //Get webhooks
 func GetWebhook() {
 	conn := redisdb.GetPool().Get()
 	defer conn.Close()
-	if !hasEnvVariables() {
+	if !HasEnvVariables() {
 		panic("Missing required environment variable")
 	}
 	fmt.Println("Getting webhooks...")
-	client := createClient()
+	client := CreateClient()
 	path := endpoint + "/all/" + os.Getenv("WEBHOOK_ENV") + "/webhooks.json"
 	resp, _ := client.Get(path)
 	defer resp.Body.Close()
@@ -63,14 +54,14 @@ func GetWebhook() {
 
 func RegisterWebhook() {
 	fmt.Println("Registering webhook...")
-	if !hasEnvVariables() {
+	if !HasEnvVariables() {
 		panic("Missing required environment variable")
 	}
 	if os.Getenv("APP_URL") == "" {
 		panic("missing app url")
 	}
 
-	httpClient := createClient()
+	httpClient := CreateClient()
 
 	path := endpoint + "/all/" + os.Getenv("WEBHOOK_ENV") + "/webhooks.json"
 	values := url.Values{}
@@ -84,15 +75,15 @@ func RegisterWebhook() {
 	}
 	conn := redisdb.GetPool().Get()
 	conn.Do("SET", "webhook_id", data["id"].(string))
-	fmt.Println("Webhook id of " + data["id"].(string) + "has been registered")
+	fmt.Println("Webhook id of " + data["id"].(string) + " has been registered")
 }
 
 func SubscribeWebhook() {
 	fmt.Println("Subscribing webapp...")
-	if !hasEnvVariables() {
+	if !HasEnvVariables() {
 		panic("Missing Environment Variables")
 	}
-	client := createClient()
+	client := CreateClient()
 	path := endpoint + "/all/" + os.Getenv("WEBHOOK_ENV") + "/subscriptions.json"
 	resp, _ := client.PostForm(path, nil)
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -107,10 +98,10 @@ func SubscribeWebhook() {
 
 func DeleteWebhook(id string) {
 	fmt.Println("Deleting webhook...")
-	if !hasEnvVariables() {
+	if !HasEnvVariables() {
 		panic("Missing required environment variable")
 	}
-	client := createClient()
+	client := CreateClient()
 	path := endpoint + "/all/" + os.Getenv("WEBHOOK_ENV") + "/webhooks/" + id + ".json"
 	req, err := http.NewRequest("DELETE", path, nil)
 	if err != nil {
