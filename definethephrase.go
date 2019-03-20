@@ -31,6 +31,7 @@ func main() {
 
 func setUpServer() {
 	//Register routes with mux
+	fmt.Println("Starting Server")
 	m := mux.NewRouter()
 	m.HandleFunc("/", func(writer http.ResponseWriter, _ *http.Request) {
 		writer.WriteHeader(200)
@@ -46,5 +47,9 @@ func setUpServer() {
 		port = os.Getenv("PORT")
 	}
 	server.Addr = ":" + port
-	server.ListenAndServe()
+	err := server.ListenAndServe()
+	if err != nil{
+		fmt.Println("Error hit on starting server")
+		fmt.Println(err.Error())
+	}
 }

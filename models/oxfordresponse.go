@@ -23,7 +23,7 @@ type sense struct {
 }
 
 func (response *OxfordResponse) GetDefinitions() []string{
-	definitionList := make([]string,1)
+	definitionList := make([]string,0)
 	//TODO Abeg find a more elegant way for this piece of rubbish later
 	for _,result := range response.Results {
 		for _,lexicalentry := range result.LexicalEntries{
@@ -36,6 +36,5 @@ func (response *OxfordResponse) GetDefinitions() []string{
 			}
 		}
 	}
-
 	return  definitionList
 }

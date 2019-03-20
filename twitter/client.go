@@ -22,6 +22,7 @@ type Tweet struct {
 	IdStr string `json:"id_str"`
 	User  User
 	Text  string
+	RetweetedObject map[string]interface{} `json:"retweeted_status"`
 }
 type User struct {
 	Id     int64
@@ -45,25 +46,35 @@ func SendResponse(tweet *Tweet, response string) {
 	if index := strings.Index(name, " "); index != -1 {
 		name = name[:index]
 	}
-	content := "@"+tweet.User.Handle+" Hi "+ name + ". " +response
-	tweets := RecursiveSplit(content,280)
-
+	content := "@" + tweet.User.Handle + " Hi " + name + ". " + response
+	tweets := RecursiveSplit(content, 280)
+	var (
+		returnedTweet *Tweet
+		err           error
+	)
 	for index, item := range tweets {
-		var (
-			returnedTweet *Tweet
-			err           error
-		)
 		if index == 0 {
 			returnedTweet, err = SendTweet(item, tweet.IdStr)
 			if err != nil {
-				panic("Could not send tweet response: " + err.Error())
+				fmt.Println("Could not send tweet response: " + err.Error())
 			}
 		} else {
 			returnedTweet, err = SendTweet(item, returnedTweet.IdStr)
 			if err != nil {
-				panic("Could not send tweet response: " + err.Error())
+				fmt.Println("Could not send tweet response: " + err.Error())
 			}
 		}
+	}
+}
+
+func SendErrorResponse(tweet *Tweet, response string){
+	name := strings.Trim(tweet.User.Name, " ")
+	if index := strings.Index(name, " "); index != -1 {
+		name = name[:index]
+	}
+	message := "@"+tweet.User.Handle+" Hi "+ name+ ". "+response
+	if _,err := SendTweet(message,tweet.IdStr); err != nil{
+		fmt.Println("Error Occurred: "+ err.Error())
 	}
 }
 
@@ -79,7 +90,10 @@ func SendTweet(tweet string, reply_id string) (*Tweet, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 	fmt.Println(string(body))
 	err = json.Unmarshal(body, &responseTweet)
 	if err != nil {
@@ -99,7 +113,8 @@ func RecursiveSplit(text string, limit int) []string {
 		firstSection := text[:lastOccurrence[0]+1] + "..."
 		secondSection := text[lastOccurrence[0]+1:]
 		result := []string{firstSection}
-		result = append(result, RecursiveSplit(secondSection,limit)...)
+		result = append(result, RecursiveSplit(secondSection, limit)...)
 		return result
 	}
 }
+

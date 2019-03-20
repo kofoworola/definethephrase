@@ -25,7 +25,6 @@ func CrcCheck(writer http.ResponseWriter, request *http.Request) {
 	token := request.URL.Query()["crc_token"]
 	if len(token) < 1 {
 		fmt.Println("No crc_token given")
-		fmt.Fprintf(writer, "No token given")
 		return
 	}
 	h := hmac.New(sha256.New, []byte(os.Getenv("CONSUMER_SECRET")))
@@ -50,15 +49,36 @@ func WebhookHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 func parseTweet(tweet twitter.Tweet) {
-	reg := regexp.MustCompile("@" + os.Getenv("HANDLE") + " (the|this) (word|phrase)")
-	indices := reg.FindStringIndex(tweet.Text)
-	if len(indices) != 2 {
-		fmt.Println("Could not understand")
+	if tweet.RetweetedObject != nil{
+		fmt.Println("Issa Retweet")
 		return
 	}
-	phrase := strings.Trim(tweet.Text[indices[1]:], " ")
-	client := DefinitionClient{Phrase: phrase, Provider: "oxford"}
+	reg := regexp.MustCompile("(?i)@" + os.Getenv("HANDLE") + " (word|phrase)")
+	indicesHandle := reg.FindStringIndex(tweet.Text)
+	if indicesHandle == nil {
+		fmt.Println("Could not understand tweet " + tweet.Text)
+		return
+	}
+	phrase := strings.Trim(tweet.Text[indicesHandle[1]:], " ")
+	var provider string
+	reg = regexp.MustCompile(`(?i)according to (urbandictionary|oxford)`)
+	indicesAccording := reg.FindStringIndex(tweet.Text)
+	if indicesAccording != nil && len(indicesAccording) == 2 {
+		reg = regexp.MustCompile(`(?i)urbandictionary|oxford`)
+		provider = reg.FindString(tweet.Text[indicesAccording[0]:indicesAccording[1]])
+		phrase = strings.Trim(tweet.Text[indicesHandle[1]:indicesAccording[0]], " ")
+	}
+	client := DefinitionClient{Phrase: phrase, Provider: provider}
 	//Reply after 2 seconds to prevent spam marks
 	time.Sleep(2 * time.Second)
-	twitter.SendResponse(&tweet,client.CheckDefinition())
+	status,definition, err := client.CheckDefinition()
+	if err != nil {
+		fmt.Println("Error occurred at" + time.Now().String() + " response: \n " + err.Error())
+	} else {
+		if !status {
+			twitter.SendErrorResponse(&tweet, "@"+tweet.User.Handle+" Hi "+tweet.User.Name+", "+definition)
+		} else {
+			twitter.SendResponse(&tweet, definition)
+		}
+	}
 }
