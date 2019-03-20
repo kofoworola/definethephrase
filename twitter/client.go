@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -44,25 +45,21 @@ func SendResponse(tweet *Tweet, response string) {
 	if index := strings.Index(name, " "); index != -1 {
 		name = name[:index]
 	}
-	pre := "@" + tweet.User.Handle + " Hi " + name + ". "
-	var content string
-	if len(response) < 280-len(pre) {
-		content = response
-	}
-	var tweets []string
-	tweets = append(tweets, content)
-	for index, content := range tweets {
+	content := "@"+tweet.User.Handle+" Hi "+ name + ". " +response
+	tweets := RecursiveSplit(content,280)
+
+	for index, item := range tweets {
 		var (
 			returnedTweet *Tweet
 			err           error
 		)
 		if index == 0 {
-			returnedTweet, err = SendTweet(pre + content, tweet.IdStr)
+			returnedTweet, err = SendTweet(item, tweet.IdStr)
 			if err != nil {
 				panic("Could not send tweet response: " + err.Error())
 			}
 		} else {
-			returnedTweet, err = SendTweet(content, returnedTweet.IdStr)
+			returnedTweet, err = SendTweet(item, returnedTweet.IdStr)
 			if err != nil {
 				panic("Could not send tweet response: " + err.Error())
 			}
@@ -74,10 +71,10 @@ func SendTweet(tweet string, reply_id string) (*Tweet, error) {
 	fmt.Println("Sending tweet as reply to " + reply_id)
 	var responseTweet Tweet
 	params := url.Values{}
-	params.Set("status",tweet)
-	params.Set("in_reply_to_status_id",reply_id)
+	params.Set("status", tweet)
+	params.Set("in_reply_to_status_id", reply_id)
 	client := CreateClient()
-	resp, err := client.PostForm("https://api.twitter.com/1.1/statuses/update.json",params)
+	resp, err := client.PostForm("https://api.twitter.com/1.1/statuses/update.json", params)
 	if err != nil {
 		return nil, err
 	}
@@ -85,16 +82,24 @@ func SendTweet(tweet string, reply_id string) (*Tweet, error) {
 	body, _ := ioutil.ReadAll(resp.Body)
 	fmt.Println(string(body))
 	err = json.Unmarshal(body, &responseTweet)
-	if err != nil{
-		return  nil,err
+	if err != nil {
+		return nil, err
 	}
 	return &responseTweet, nil
 }
 
-func BreakTest(text string, limit int) []string{
-	result := make([]string,1)
-	if len(text) < limit{
-		result = append(result,text)
+func RecursiveSplit(text string, limit int) []string {
+	if len(text) <= limit {
+		result := []string{text}
+		return result
+	} else {
+		regex := regexp.MustCompile(`(?:[a-zA-Z0-9_!,.])\s(?:[a-zA-Z0-9_!,.])?`)
+		occurrences := regex.FindAllStringIndex(text[:limit-3], -1)
+		lastOccurrence := occurrences[len(occurrences)-1]
+		firstSection := text[:lastOccurrence[0]+1] + "..."
+		secondSection := text[lastOccurrence[0]+1:]
+		result := []string{firstSection}
+		result = append(result, RecursiveSplit(secondSection,limit)...)
+		return result
 	}
-	return result
 }
