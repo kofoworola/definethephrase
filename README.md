@@ -17,3 +17,6 @@ You can also specify a source between "urbandictionary" and "oxford"
 * More Sources
 * Search for definitions based on parts of speech specified
 * Think of more things
+
+## Important
+Thanks to [This Amazing tool for urban dictionary scraping](http://urbanscraper.herokuapp.com/) by [Nick Charlton](http://nickcharlton.net/)
